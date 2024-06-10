@@ -29,7 +29,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train_model(model, train_loader, test_loader, y_normalizer, optimizer, scheduler):
-    os.mkdir(RESULT_PATH)
+    os.makedirs(RESULT_PATH, exist_ok=True)
 
     train_losses = []
     test_losses = []

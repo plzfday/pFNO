@@ -158,18 +158,15 @@ class FNO2d(nn.Module):
 
         for pos in range(self.L):
             freq = cst * (2**pos)
-            cos_encoding.append(torch.cos(freq * x))
-            sin_encoding.append(torch.sin(freq * x))
+            cos_encoding.append(torch.cos(freq * x).unsqueeze(-1))
+            sin_encoding.append(torch.sin(freq * x).unsqueeze(-1))
 
         # Concatenate along the last dimension
         cos_encoding = torch.cat(cos_encoding, dim=-1)
         sin_encoding = torch.cat(sin_encoding, dim=-1)
 
-        # Stack cos_encoding and sin_encoding along the last dimension to get final shape
-        encoding = torch.stack((cos_encoding, sin_encoding), dim=-1)
-
-        # Reshape the final encoding to have the last dimension of size 20 (2 * L)
-        encoding = encoding.view(encoding.shape[:-2] + (-1,))
+        # Concatenate cos and sin encodings along the last dimension
+        encoding = torch.cat((cos_encoding, sin_encoding), dim=-1)
 
         return encoding
 
