@@ -3,10 +3,10 @@ repeat: 5
 n_train: 1000
 n_test: 100
 batch_size: 20
-lr: 0.001
+lr: 0.005
 modes: 12
-width: 32
-epochs: 1
+width: 64
+epochs: 1000
 r: 5
 train_path: "./darcy421/piececonst_r421_N1024_smooth1.mat"
 test_path: "./darcy421/piececonst_r421_N1024_smooth2.mat"

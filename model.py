@@ -73,11 +73,11 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.mlp1 = nn.Conv2d(in_channels, mid_channels, 1)
         self.mlp2 = nn.Conv2d(mid_channels, out_channels, 1)
-        self.batchnorm = nn.BatchNorm2d(mid_channels)
+        self.norm = nn.GroupNorm(num_groups=2, num_channels=mid_channels)
 
     def forward(self, x):
         x = self.mlp1(x)
-        x = self.batchnorm(x)
+        x = self.norm(x)
         x = F.gelu(x)
         x = self.mlp2(x)
         return x
@@ -122,8 +122,11 @@ class FNO2d(nn.Module):
         self.ws = nn.ModuleList(
             [nn.Conv2d(self.width, self.width, 1) for _ in range(self.fourier_depth)]
         )
-        self.batchnorms = nn.ModuleList(
-            [nn.BatchNorm2d(self.width) for _ in range(self.fourier_depth)]
+        self.norms = nn.ModuleList(
+            [
+                nn.GroupNorm(num_groups=2, num_channels=self.width)
+                for _ in range(self.fourier_depth)
+            ]
         )
         self.q = MLP(self.width, 1, self.width * 4)  # output channel is 1: u(x, y)
 
@@ -131,6 +134,7 @@ class FNO2d(nn.Module):
         grid = self.get_grid(x.shape, x.device)  # (batchsize, 85, 85, 2)
         pos_encoding = self.positional_encoding(grid)  # (batchsize, 85, 85, 40)
         x = torch.cat((x, grid, pos_encoding), dim=-1)
+
         x = self.p(x)
         x = x.permute(0, 3, 1, 2)
         x = F.pad(x, [0, self.padding, 0, self.padding])
@@ -139,7 +143,7 @@ class FNO2d(nn.Module):
             x1 = self.convs[i](x)
             x1 = self.mlps[i](x1)
             x2 = self.ws[i](x)
-            x2 = self.batchnorms[i](x2)
+            x2 = self.norms[i](x2)
             x = x1 + x2
             if i != self.fourier_depth - 1:
                 x = F.gelu(x)
@@ -158,8 +162,8 @@ class FNO2d(nn.Module):
 
         for pos in range(self.L):
             freq = cst * (2**pos)
-            cos_encoding.append(torch.cos(freq * x).unsqueeze(-1))
-            sin_encoding.append(torch.sin(freq * x).unsqueeze(-1))
+            cos_encoding.append(torch.cos(freq * x))
+            sin_encoding.append(torch.sin(freq * x))
 
         # Concatenate along the last dimension
         cos_encoding = torch.cat(cos_encoding, dim=-1)
