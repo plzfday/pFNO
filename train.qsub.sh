@@ -14,13 +14,13 @@
 #$ -l h_rt=1000000
 #$ -l gpu=True
 #$ -l tmem=11G
-#$ -pe gpu 2
+#$ -pe gpu 1
 
 #These are optional flags but you probably want them in all jobs
 
 #$ -S /bin/bash
 #$ -j y
-#$ -N resUnetT
+#$ -N pFNO
 #$ -cwd
 
 #The code you want to run now goes here.
